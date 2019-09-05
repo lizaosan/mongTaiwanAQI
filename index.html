@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>空氣AQI指數報告</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <link href="https://fonts.googleapis.com/css?family=Noto+Sans+TC:100,300,400,500,700,900&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <div id="app">
+        <!--  女孩子  -->
+        <div id="mong" class="drop-shadow">
+            <img v-if="(status === '良好' || status === '普通')" src="./images/mong.png" alt="" class="img-fluid; max-width：100%; height：auto; ">
+            <img v-else src="./images/mong01.png" alt="" class="img-fluid; max-width：100%; height：auto; ">
+        </div>
+        <!--  雲朵  -->
+        <div class="cloud00">
+            <img src="images/cloud00.png">
+        </div>
+        <div class="cloud01">
+            <img src="images/cloud01.png">
+        </div>
+        <!--  對話泡泡  -->
+        <div class="view">
+            <div class="d-flex justify-content-center align-items-center ">
+                <div class="container">
+                    <div class="row">
+                        <div id="speechBubble" class="col-md-8 text-center text-md-left mt-xl-5 mb-5">
+                            <h1 class="h1-responsive  mt-sm-5">空氣AQI指數報告</h1>
+                            <hr class="hr-light">
+                            <h6 class="mb-4">Hello, 請告訴我你想知道哪個地區的空氣品質！</h6>
+                            <select name="" id="" class="form-control mb-3" v-model="selectedSiteName">
+                                <option value="default" selected>--- 選擇地區 ---</option>
+                                <option v-for="(item, index) in getJson" :key="index" :value="item.SiteName">{{ item.County }} - {{  item.SiteName  }}</option>
+                            </select>
+                            <div v-if="selectedSiteName !== 'default'">
+                                <h6>{{ selectedJson[0].SiteName }} 現在的空氣品質是 <span v-bind:style="{ color:statusColor }">{{ selectedJson[0].Status }}</span> ！{{  secondWord  }}</h6>
+                            </div>
+                        </div>
+                        <div class="col-md-4 col-xl-5 mt-xl-5 ">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!--  流星雨  -->
+    <div class="stars">
+        <div class="star"></div>
+        <div class="star" style=" top: 0px; left: 900px; animation-delay: 7s;"></div>
+        <div class="star" style=" top: -500px; left: 1200px; animation-delay: 3s;"></div>
+        <div class="star" style=" top: 5px; left: 1800px; animation-delay: 3s;"></div>
+    </div>
+              
+    <!--  外部引入框架與library  -->
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+</body>
+</html>
+
+<script>
+let app = new Vue({
+    el: '#app',
+    data: {
+        getJson: [],
+        selectedSiteName: 'default',
+        status: '良好',
+    },
+    mounted(){
+        this.getData(); // 擷取 JSON 資料
+    },
+    methods: {
+        getData() {
+            const that = this;
+            const api = 'http://opendata2.epa.gov.tw/AQI.json';
+
+            $.get(api).then(function(response) {
+                that.getJson = response;
+                console.log(that.getJson)
+            });
+        },
+    },
+    computed: {
+        selectedJson() { // 地區揀選
+            return this.getJson.filter(
+                item => this.selectedSiteName == item.SiteName
+            )
+        },
+        secondWord() { // 第二句話
+            this.status = this.selectedJson[0].Status
+            let returnWord = '';
+            switch(this.selectedJson[0].Status){
+                case '良好' : returnWord = '太棒了！每個人都可以呼吸新鮮的空氣！';
+                break;
+                case '普通' : returnWord = '大家一起盡一份心力，減少空氣汙染吧！';
+                break;
+                case '對敏感族群不健康' : returnWord = '呼吸道比較敏感的朋友請務必注意唷！';
+                break;
+                case '對所有族群不健康' : returnWord = '空氣混濁，請各位外出考慮戴上口罩！';
+                break;
+                case '非常不健康' : returnWord = '噢，不！戶外的空氣真的不太好，請務必要戴上口罩！';
+                break;
+                case '危害' : returnWord = '這真是最慘的狀況了，請大家避免外出！';
+                break;
+                case '設備維護' : returnWord = '不好意思，我們的設備正在維護中！請稍待片刻！';
+                break;
+                default: returnWord = '';
+                break;
+            }
+            return returnWord;
+        },
+        statusColor() { // 文字狀態變色
+            let returnColor = '';
+            switch(this.selectedJson[0].Status){
+                case '良好' : returnColor = '#3fa645';
+                break;
+                case '普通' : returnColor = '#3fa645';
+                break;
+                case '對敏感族群不健康' : returnColor = '#fac11a';
+                break;
+                case '對所有族群不健康' : returnColor = '#fac11a';
+                break;
+                case '非常不健康' : returnColor = '#d43948';
+                break;
+                case '危害' : returnColor = '#d43948';
+                break;
+                case '設備維護' : returnColor = '#6d757d';
+                break;
+                default: returnColor = '';
+                break;
+            }
+            return returnColor;
+        }
+    },
+})
+</script>
+
+<style>
+body, html {
+    background-image: url("./images/bg.jpg");
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    font-family: 'Noto Sans TC', sans-serif;
+    overflow-x: hidden;
+    overflow-y: hidden;
+}
+
+html,
+body,
+header,
+.view {
+    width: 100%;
+    height: 100%;
+}
+
+#speechBubble{
+    background-color: rgba(255, 255, 255, 0.75);
+    border-radius: 50px;
+    padding: 0px 100px 50px 50px;
+    animation: fadein 0.7s;
+}
+
+#speechBubble:after {
+	content: '';
+	position: absolute;
+	bottom: 0;
+	left: 85%;
+	width: 0;
+	height: 0;
+	border: 36px solid transparent;
+	border-top-color: rgba(255, 255, 255, 0.75);
+	border-bottom: 0;
+	border-left: 0;
+	margin-left: -18px;
+	margin-bottom: -36px;
+    transform:scaleX(-1);
+}
+
+@keyframes fadein {
+    from { opacity: 0;}
+    to   { opacity: 1;}
+}
+
+#mong{
+    position: absolute;
+    top: 0px;
+    right : 0px;
+    max-width: 100%;
+    animation: mongfadein 0.7s;
+}
+
+@keyframes mongfadein {
+    from { opacity: 0; right:-5%}
+    to   { opacity: 1; right:0%}
+}
+
+.drop-shadow {
+    -webkit-filter: drop-shadow(12px 12px 1px rgba(0, 26, 255, 0.3));
+    filter: drop-shadow(12px 12px 1px rgba(0, 26, 255, 0.3))
+}
+
+.star {
+    display: block;
+    width: 3px;
+    height: 3px;
+    border-radius: 50%; 
+    background: #FFF;
+    opacity: 0.2;
+    top: 100px;
+    left: 400px;
+    position: relative;
+    box-shadow: 0 0 7px 5px rgba(255, 255, 255, .3); 
+    animation: star-ani 6s infinite ease-out;
+    animation-fill-mode: both;
+}
+
+.star:after {
+    content: '';
+    display: block;
+    top: 0px;
+    left: 4px;
+    border: 0px solid #fff;
+    border-width: 1px 200px 1px 200px;
+    border-color: transparent transparent transparent rgba(255, 255, 255, .3);
+    transform: rotate(-45deg) translate3d(1px, 1px, 0);
+    transform-origin: 0% 0%;
+}
+
+@keyframes star-ani {
+    0% {
+        opacity: 0;
+        transform: scale(0) rotate(0) translate3d(0, 0, 0);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1) rotate(0) translate3d(-200px, 200px, 0);
+    }
+    100% {
+        opacity: 0;
+        transform: scale(1) rotate(0) translate3d(-300px, 300px, 0);
+    }
+}
+
+.cloud00 {
+    position: absolute;
+    opacity: 0.85;
+    top: 60%;
+    left: -10%;
+    animation: cloud-ani00 20s infinite;
+}
+
+@keyframes cloud-ani00 {
+    0%{
+        transform:translate(0, 0);
+    }
+    50%{
+        transform:translate(-100px, 0);
+    }
+    100%{
+        transform:translate(0, 0);
+    }
+}
+
+.cloud01 {
+    position: absolute;
+    opacity: 0.85;
+    top: 78%;
+    left: 80%;
+    animation: cloud-ani00 12s infinite;
+}
