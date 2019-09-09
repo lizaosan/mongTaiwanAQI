@@ -77,13 +77,37 @@ let app = new Vue({
     },
     methods: {
         getData() {
-            const that = this;
-            const api = 'http://opendata2.epa.gov.tw/AQI.json';
+            this.getJson = [
+                {
+                "SiteName": "基隆",
+                "County": "基隆市",
+                "Status": "良好",
+                },
+                {
+                "SiteName": "汐止",
+                "County": "新北市",
+                "Status": "對敏感族群不健康",
+                },
+                {
+                "SiteName": "中和",
+                "County": "新北市",
+                "Status": "危害",
+                },
+                {
+                "SiteName": "板橋",
+                "County": "新北市",
+                "Status": "設備維護",
+                },
+            ]
 
-            $.get(api).then(function(response) {
-                that.getJson = response;
-                console.log(that.getJson)
-            });
+            // 因應政府網站 http 跨域問題 mock 一份假資料
+            // const that = this;
+            // const api = 'http://opendata2.epa.gov.tw/AQI.json';
+
+            // $.get(api).then(function(response) {
+            //     that.getJson = response;
+            //     console.log(that.getJson)
+            // });
         },
     },
     computed: {
